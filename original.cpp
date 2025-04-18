@@ -2,17 +2,18 @@
 #include <vector>
 #include <cmath>
 #include <cstdlib>
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 #include <ctime>
 #include <fstream>
 #include <sstream>
 #include <chrono>
 #include <random>
+#include <numbers>
 
 using namespace std;
 using namespace Eigen;
 
-double pi = M_PI;
+using numbers::pi;
 
 // CSV ファイルを読み込んで MatrixXd に変換する関数
 MatrixXd readCSV(const string &filename)
