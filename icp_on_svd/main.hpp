@@ -13,13 +13,14 @@
 
 #include <cmath>
 #include <cstdint>
-#include <concepts>
+#include <utility>
+#include <vector>
+#include <limits>
 
 #include <eigen3/Eigen/Dense>
 
 namespace crs_lib::icp_on_svd::main::impl {
 	using i64 = std::int64_t;
-	using std::numbers::pi;
 	using Eigen::Matrix2Xd;
 	using Eigen::Matrix2d;
 	using Eigen::Vector2d;
@@ -78,20 +79,6 @@ namespace crs_lib::icp_on_svd::main::impl {
 		(void) part;
 		(void) whole;
 		return 0.0;  // 仮
-	}
-	
-	/// @brief [-pi, pi)を返すfmod。
-	inline constexpr auto modpi(const double x) noexcept -> double {
-		double result = std::fmod(x, 2 * pi);
-		if (result < -pi)
-		{
-			result += 2 * pi;
-		}
-		else if (result >= pi)
-		{
-			result -= 2 * pi;
-		}
-		return result;
 	}
 
 	/// @brief 同次変換行列を作成
@@ -211,4 +198,12 @@ namespace crs_lib::icp_on_svd::main::impl {
 		const auto rotation = total_transform.rotation();
 		return Pose2d{translation(0), translation(1), std::atan2(rotation(1, 0), rotation(0, 0))};
 	}
+}
+
+namespace crs_lib::icp_on_svd::main {
+	using impl::Pose2d;
+	using impl::Line2d;
+	using impl::distance_l2l;
+	using impl::distance_p2l;
+	using impl::icp_p2l;
 }
