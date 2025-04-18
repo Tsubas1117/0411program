@@ -38,7 +38,7 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 	/// -> マップ線分は各頂点がグローバル座標を持つような、無向グラフ構造で持っておくほうがいい？
 	///    -> そもそもこの処理は頂点座標付きグラフ構造のメンバ関数にするべきかも
 	/// 計算量はO(頂点数)、平均計算量はずっと小さくて済みそう
-	inline auto make_visible_lines(const auto& map, const Pose2d& pose) -> std::vector<Line2d> {
+	inline auto make_visible_lines(const auto& map, const Pose2d& pose) noexcept -> std::vector<Line2d> {
 		// 各端点を同次変換し、極座標にしてthetaでソート
 		// 末尾には先頭の点を入れておく
 		const auto map_local = map.to_local_rtheta(pose);
@@ -74,7 +74,7 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 
 	/// @brief 点群を線分群にfittingする ICP on SVD
 	/// 線分数は点数に比べ十分少ないとする
-	inline auto icp_p2l(Matrix2Xd from, std::vector<Line2d> to) -> Pose2d {
+	inline auto icp_p2l(Matrix2Xd from, std::vector<Line2d> to) noexcept -> Pose2d {
 
 		// fromを、重心を原点とする座標系に直す
 		const auto from_mean = from.rowwise().mean();
@@ -141,7 +141,7 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 		// Pose2Dにして返す
 		const auto translation = total_transform.translation();
 		const auto rotation = total_transform.rotation();
-		return Pose2d{translation(0), translation(1), std::atan2(rotation(1, 0), rotation(0, 0))};
+		return Pose2d{translation, std::atan2(rotation(1, 0), rotation(0, 0))};
 	}
 }
 
