@@ -33,45 +33,6 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 	using utility::distance_l2l;
 	using utility::distance_p2l;
 
-	/// @brief グローバル座標系でのマップ線分から、ローカル座標系での可視なマップ線分を計算
-	/// マップ線分は重複せず、またそれぞれの線分は交点を端点以外に持たないようにしておく
-	/// -> マップ線分は各頂点がグローバル座標を持つような、無向グラフ構造で持っておくほうがいい？
-	///    -> そもそもこの処理は頂点座標付きグラフ構造のメンバ関数にするべきかも
-	/// 計算量はO(頂点数)、平均計算量はずっと小さくて済みそう
-	inline auto make_visible_lines(const auto& map, const Pose2d& pose) noexcept -> std::vector<Line2d> {
-		// 各端点を同次変換し、極座標にしてthetaでソート
-		// 末尾には先頭の点を入れておく
-		const auto map_local = map.to_local_rtheta(pose);
-
-		// 可視な線分を見つけていく
-		// 途中途中、thetaの増減で向きつけしたDAGを考えることがある
-		std::vector<Line2d> ret{};
-		std::vector<Line2d> connected_vertices{};
-		/// @todo ret.reserve(??);
-		/// @todo connected_vertices.reserve(??);
-		auto iter = map_local.vertices.begin();
-		while(iter != map.vertices.end()) {
-			// DAGの隣接頂点の中で最も原点に近いものを選んでいく
-			auto v = map_local.get_vertex(iter->idx);
-			while(true) {
-				connected_vertices.emplace_back(v);
-				if(const auto next_opt = map_local.next(v)) {
-					v = *next_opt;
-				}
-				else break;
-			}
-
-			// 繋がってる点をretに追加していく
-			for(int i = 0; i < int(connected_vertices.size()) - 1; ++i) {
-				ret.emplace_back(map_local.vertices[i].xy, map_local.vertices[i + 1].xy);
-			}
-
-			iter = map_local.next_by_r(iter);
-		}
-
-		return ret;
-	}
-
 	/// @brief 点群を線分群にfittingする ICP on SVD
 	/// 線分数は点数に比べ十分少ないとする
 	inline auto icp_p2l(Matrix2Xd from, std::vector<Line2d> to) noexcept -> Pose2d {
