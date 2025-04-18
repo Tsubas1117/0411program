@@ -140,26 +140,25 @@ namespace crs_lib::icp_on_svd::main::impl {
 		return ret;
 	}
 
-	/// @brief センサ由来の点群をマップ由来の線分にfittingする ICP on SVD
-	inline auto icp_p2l(const std::vector<Line2d>& map_local_lines, const Matrix2Xd& laserscan_local_xy) -> Pose2d {
-		std::vector<Line2d> map = map_local_lines;
+	/// @brief 点群を線分群にfittingする ICP on SVD
+	/// 線分数は点数に比べ十分少ないとする
+	inline auto icp_p2l(Matrix2Xd from, std::vector<Line2d> to) -> Pose2d {
 
-		// laserscan_local_xyを、重心を原点とする座標系に直す
-		auto laserscan = laserscan_local_xy;
-		const auto laserscan_mean = laserscan_local_xy.rowwise().mean();
-		static_assert(decltype(laserscan_mean)::RowsAtCompileTime == 2);
-		laserscan.colwise() -= laserscan_mean;  // これ以降laserscanは変更されない
+		// fromを、重心を原点とする座標系に直す
+		const auto from_mean = from.rowwise().mean();
+		static_assert(decltype(from_mean)::RowsAtCompileTime == 2);
+		from.colwise() -= from_mean;  // これ以降fromは変更されない
 
-		// laserscanをclosest_pointsに合わせる変換を計算し、その変換を合成、mapに適用していく
-		auto closest_points = Matrix2Xd{laserscan_local_xy.rows(), laserscan_local_xy.cols()};
+		// fromをclosest_pointsに合わせる変換を計算し、その変換を合成、toに適用していく
+		auto closest_points = Matrix2Xd{from.rows(), from.cols()};
 		auto total_transform = Transform<double, 2, Isometry>::Identity();
 		for(i64 iloop = 0; iloop < 50; iloop++) {  // とりあえず50回
-			// laserscanの各点の最近接点を求める
-			for(i64 ip = 0; ip < i64(laserscan_local_xy.cols()); ++ip) {
+			// fromの各点の最近接点を求める
+			for(i64 ip = 0; ip < i64(from.cols()); ++ip) {
 				Vector2d closest_point{};
 				double closest_distance = std::numeric_limits<double>::infinity();
-				for (i64 iq = 0; iq < i64(map.size()); iq++) {
-					const auto [point, distance] = distance_p2l(laserscan_local_xy.col(ip), map[iq]);
+				for (i64 iq = 0; iq < i64(to.size()); iq++) {
+					const auto [point, distance] = distance_p2l(from.col(ip), to[iq]);
 					if(distance < closest_distance) {
 						closest_distance = distance;
 						closest_point = point;
@@ -175,7 +174,7 @@ namespace crs_lib::icp_on_svd::main::impl {
 			closest_points.colwise() -= closest_points_mean;
 
 			// SVDで最適な剛体変換を求める
-			const auto cross_covariance = (laserscan) * closest_points.transpose();
+			const auto cross_covariance = (from) * closest_points.transpose();
 			static_assert(decltype(cross_covariance)::RowsAtCompileTime == 2 && decltype(cross_covariance)::ColsAtCompileTime == 2);
 
 			// SVD分解
@@ -190,7 +189,7 @@ namespace crs_lib::icp_on_svd::main::impl {
 			}
 
 			// 最適な平行移動を計算
-			auto optimized_translation = closest_points_mean - optimized_rotation * laserscan_mean;
+			auto optimized_translation = closest_points_mean - optimized_rotation * from_mean;
 			static_assert(decltype(optimized_translation)::RowsAtCompileTime == 2 && decltype(optimized_translation)::ColsAtCompileTime == 1);
 
 			// 最適な剛体変換に合わせ、それを蓄積する
@@ -199,11 +198,11 @@ namespace crs_lib::icp_on_svd::main::impl {
 
 			total_transform = optimized_transform * total_transform;
 
-			// 計算が少なくて済むので、mapのほうを動かしてやる。適用すべきは逆変換である事に注意
+			// 線分数が十分に小さいため計算が少なくて済むよう、toのほうを動かしてやる。適用すべきは逆変換である事に注意
 			const auto inv_transform = optimized_transform.inverse();
-			for(auto& mapi : map) {
-				mapi.p1 = inv_transform * mapi.p1;
-				mapi.p2 = inv_transform * mapi.p2;
+			for(auto& toi : to) {
+				toi.p1 = inv_transform * toi.p1;
+				toi.p2 = inv_transform * toi.p2;
 			}
 		}
 
