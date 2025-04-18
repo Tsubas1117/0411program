@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <utility>
 
@@ -18,10 +19,11 @@
 
 namespace ac_zemi_2025::integer_type {
 	using i64 = std::int64_t;
+	using usize = std::size_t;
 }
 
 namespace ac_zemi_2025 {
-	using integer_type::i64;
+	using namespace integer_type;
 }
 
 namespace ac_zemi_2025::utility::impl {
