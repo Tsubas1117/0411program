@@ -28,10 +28,17 @@ namespace ac_zemi_2025 {
 
 namespace ac_zemi_2025::utility::impl {
 	using Eigen::Vector2d;
+	using Eigen::Isometry2d;
 
 	struct Pose2d final {
 		Vector2d xy;
 		double th;
+
+		constexpr auto homogeneus_transform() const noexcept -> Isometry2d {
+			auto ret = Isometry2d::Identity();
+			ret.rotate(this->th).pretranslate(this->xy);
+			return ret;
+		}
 	};
 
 	// 端点2つによる線分表現

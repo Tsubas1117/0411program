@@ -24,8 +24,7 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 	using Eigen::Matrix2Xd;
 	using Eigen::Matrix2d;
 	using Eigen::Vector2d;
-	using Eigen::Transform;
-	using Eigen::Isometry;
+	using Eigen::Isometry2d;
 	using Eigen::JacobiSVD;
 
 	using utility::Line2d;
@@ -44,7 +43,7 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 
 		// fromをclosest_pointsに合わせる変換を計算し、その変換を合成、toに適用していく
 		auto closest_points = Matrix2Xd{from.rows(), from.cols()};
-		auto total_transform = Transform<double, 2, Isometry>::Identity();
+		auto total_transform = Isometry2d::Identity();
 		for(i64 iloop = 0; iloop < 50; iloop++) {  // とりあえず50回
 			// fromの各点の最近接点を求める
 			for(i64 ip = 0; ip < i64(from.cols()); ++ip) {
@@ -86,7 +85,7 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 			static_assert(decltype(optimized_translation)::RowsAtCompileTime == 2 && decltype(optimized_translation)::ColsAtCompileTime == 1);
 
 			// 最適な剛体変換に合わせ、それを蓄積する
-			auto optimized_transform = Transform<double, 2, Isometry>::Identity();
+			auto optimized_transform = Isometry2d::Identity();
 			optimized_transform.rotate(optimized_rotation).pretranslate(optimized_translation);
 
 			total_transform = optimized_transform * total_transform;
