@@ -80,6 +80,7 @@ namespace ac_zemi_2025::diff2wheel_pure_pursuit::impl {
 			return std::nullopt;
 		}
 		
+		// best_indexがあればそれを、なければbetter_indexを使う
 		const auto [diff, diff_angle] = calc_diff(current_pose, best_index.has_value() ? route.col(*best_index) : route.col(*better_index));
 
 		return std::optional<Diff2wheelSpeed>{std::in_place, Diff2wheelSpeed{conf.speed, diff_angle}};
