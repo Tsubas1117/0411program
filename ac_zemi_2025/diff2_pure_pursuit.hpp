@@ -10,7 +10,6 @@
 
 namespace ac_zemi_2025::diff2_carrot_pursuit::impl {
 	using Eigen::Vector2d;
-	using Eigen::Isometry2d;
 
 	using geometry::Pose2d;
 
@@ -18,8 +17,8 @@ namespace ac_zemi_2025::diff2_carrot_pursuit::impl {
 		double ahead;
 		double rotate;
 
-		constexpr auto to_pose2d_velocity(const Isometry2d& t) const noexcept -> Pose2d {
-			return Pose2d{t * Vector2d{ahead, 0.0}, rotate};
+		constexpr auto to_pose2d_velocity(const Pose2d& pose) const noexcept -> Pose2d {
+			return Pose2d{pose.homogeneus_transform() * Vector2d{ahead, 0.0}, rotate};
 		}
 	};
 
