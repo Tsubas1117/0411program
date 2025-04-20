@@ -83,9 +83,12 @@ namespace ac_zemi_2025::global_map::impl {
 			// thの小さいほうから、可視な曲線を見つけていく
 			i64 leftmost_idx = 0;
 			while(leftmost_idx < n) {
-				// DAGの隣接頂点の中で最も原点に近いものを次々選んでいく
+				/// @todo leftmost_idxから一つだけthetaの負のほうへ戻る必要がある
+				/// 負のほうに繋がっている中で、最もr2が小さいものから始めていかなければならない
 				i64 last_idx = leftmost_idx;
 				auto nexts = this->edges.c_row(last_idx);
+
+				// DAGの隣接頂点の中で最も原点に近いものを次々選んでいく
 				while(nexts.size() > 1) {
 					std::optional<std::pair<usize, const Edge_&>> next{std::nullopt};
 					for(const auto& [idx, edge] : nexts) {
