@@ -33,7 +33,9 @@ namespace ac_zemi_2025::global_map::impl {
 
 		/// @brief 曲線群からGlobalMapを生成
 		static auto from_shapes(const std::vector<Edge_>& shapes) noexcept -> GlobalMap {
-			
+			/// @todo 実装
+			(void) shapes;
+			return {};
 		}
 
 		/// @brief グローバル座標系でのマップから、ローカル座標系での可視なマップを計算
@@ -74,7 +76,7 @@ namespace ac_zemi_2025::global_map::impl {
 			for(i64 i = 0; i < n; ++i) {
 				inv_indices[local_vertices[i].idx] = i;
 			}
-			constexpr auto get = [&local_vertices, &inv_indices](const i64 idx) noexcept -> RThetaVertex {
+			const auto get = [&local_vertices, &inv_indices](const i64 idx) noexcept -> RThetaVertex {
 				return local_vertices[inv_indices[idx]];
 			};
 
@@ -91,10 +93,10 @@ namespace ac_zemi_2025::global_map::impl {
 					std::optional<std::pair<usize, const Edge_&>> next{std::nullopt};
 					for(const auto& [idx, edge] : nexts) {
 					// 一つ前やthetaが減る向きに戻ろうとしないよう注意
-					if(idx == last_idx || get(idx).th < get(last_idx).th) continue;
+					if(i64(idx) == last_idx || get(idx).th < get(last_idx).th) continue;
 						const auto& [next_idx, _] = *next;
-						if(!next.has_value() || get(idx).r < get(next_idx).r) {
-							next = {idx, edge};
+						if(!next.has_value() || get(idx).r2 < get(next_idx).r2) {
+							next.emplace(idx, edge);
 						}
 					}
 					if(!next.has_value()) break;
@@ -111,4 +113,8 @@ namespace ac_zemi_2025::global_map::impl {
 			return ret;
 		}
 	};
+}
+
+namespace ac_zemi_2025::global_map {
+	using impl::GlobalMap;
 }
