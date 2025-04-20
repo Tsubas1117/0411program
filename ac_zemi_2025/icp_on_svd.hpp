@@ -28,6 +28,7 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 	using Eigen::Isometry2d;
 	using Eigen::JacobiSVD;
 
+	using geometry::edge;
 	using geometry::Line2d;
 	using geometry::Pose2d;
 	using geometry::closest_e2e;
@@ -35,12 +36,13 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 
 	/// @brief 点群を線分群にfittingする ICP on SVD
 	/// 線分数は点数に比べ十分少ないとする
-	inline auto icp_p2l(Matrix2Xd from, std::vector<Line2d> to, const i64 number_of_iteration) noexcept -> Pose2d {
+	inline auto icp_p2l(const Matrix2Xd& from, std::vector<Line2d> to, const i64 number_of_iteration) noexcept -> Pose2d {
 
-		// fromを、重心を原点とする座標系に直す
+		// fromを、重心を原点とする座標系に変換したものを用意
+		auto from_ = from;
 		const auto from_mean = from.rowwise().mean();
 		static_assert(decltype(from_mean)::RowsAtCompileTime == 2);
-		from.colwise() -= from_mean;  // これ以降fromは変更されない
+		from_.colwise() -= from_mean;  // これ以降from_は変更されない
 
 		// fromをclosest_pointsに合わせる変換を計算し、その変換を合成、toに適用していく
 		auto closest_points = Matrix2Xd{from.rows(), from.cols()};
@@ -67,7 +69,7 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 			closest_points.colwise() -= closest_points_mean;
 
 			// SVDで最適な剛体変換を求める
-			const auto cross_covariance = (from) * closest_points.transpose();
+			const auto cross_covariance = (from_) * closest_points.transpose();
 			static_assert(decltype(cross_covariance)::RowsAtCompileTime == 2 && decltype(cross_covariance)::ColsAtCompileTime == 2);
 
 			// SVD分解
@@ -104,8 +106,18 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 		const auto rotation = total_transform.rotation();
 		return Pose2d{translation, std::atan2(rotation(1, 0), rotation(0, 0))};
 	}
+
+	template<edge Edge_>
+	inline auto icp_e2e(const std::vector<Edge_>& from, const std::vector<Edge_>& to, const i64 number_of_iteration) noexcept -> Pose2d {
+		/// @todo 実装
+		(void) from;
+		(void) to;
+		(void) number_of_iteration;
+		return {};
+	}
 }
 
 namespace ac_zemi_2025::icp_on_svd {
 	using impl::icp_p2l;
+	using impl::icp_e2e;
 }
