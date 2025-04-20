@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <tuple>
+#include <compare>
 
 #include <eigen3/Eigen/Dense>
 
@@ -41,8 +42,8 @@ namespace ac_zemi_2025::global_map::impl {
 				double th;
 				i64 idx;
 
-				friend constexpr auto operator<=>(const RThetaVertex&, const RThetaVertex&) = default;
-				friend constexpr auto operator==(const RThetaVertex&, const RThetaVertex&) -> bool = default;
+				constexpr auto operator<=>(const RThetaVertex&) const noexcept = default;
+				constexpr auto operator==(const RThetaVertex&) const noexcept -> bool = default;
 			};
 			std::vector<RThetaVertex> local_vertices{};
 			local_vertices.reserve(n);
@@ -80,7 +81,7 @@ namespace ac_zemi_2025::global_map::impl {
 				i64 last_idx = leftmost_idx;
 				auto nexts = this->edges.c_row(last_idx);
 				while(nexts.size() > 1) {
-					std::optional<std::pair<usize_t, const Edge_&>> next{std::nullopt};
+					std::optional<std::pair<usize, const Edge_&>> next{std::nullopt};
 					for(const auto& [idx, edge] : nexts) {
 					// 一つ前やthetaが減る向きに戻ろうとしないよう注意
 					if(idx == last_idx || get(idx).th < get(last_idx).th) continue;
