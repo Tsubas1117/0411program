@@ -2,6 +2,7 @@
 #include <atomic>
 #include <iostream>
 #include <vector>
+#include <chrono>
 
 #include "utility.hpp"
 #include "geometry.hpp"
@@ -29,7 +30,6 @@ namespace test {
 		GlobalMap<Line2d> map;
 		std::vector<Vector2d> route;
 		Diff2CarrotPursuit carrot;
-		double dt;
 		i64 number_of_iteration;
 	};
 	struct RobotState final {
@@ -38,7 +38,7 @@ namespace test {
 	};
 
 	// ロボの更新式
-	inline auto robot_update(const RobotConstant& cons, RobotState& state, const Matrix2Xd& laserscan) noexcept(false) -> Diff2wheelSpeed {
+	inline auto robot_update(const RobotConstant& cons, RobotState& state, const Matrix2Xd& laserscan, const double dt) noexcept(false) -> Diff2wheelSpeed {
 		// read state /////////////////////////////////////////////////////////////////////////////
 		const auto pose = state.pose;
 
@@ -58,10 +58,29 @@ namespace test {
 		}
 
 		// update state ///////////////////////////////////////////////////////////////////////////
-		state.pose = new_pose + speed->to_pose2d_velocity(new_pose.homogeneus_transform()) * cons.dt;
+		state.pose = new_pose + speed->to_pose2d_velocity(new_pose) * dt;
 
 		return *speed;
 	}
+
+	struct MyClock final {
+		std::chrono::time_point<std::chrono::steady_clock> last;
+
+		static auto make() noexcept -> MyClock {
+			return MyClock{std::chrono::steady_clock::now()};
+		}
+
+		auto watch() const noexcept -> std::chrono::duration<double> {
+			const auto now = std::chrono::steady_clock::now();
+			return now - this->last;
+		}
+
+		auto lap() noexcept -> std::chrono::duration<double> {
+			const auto last = this->last;
+			this->last = std::chrono::steady_clock::now();
+			return this->last - last;
+		}
+	};
 
 	void main() {
 		/// @todo グローバルな図形情報を読み出し
@@ -92,14 +111,17 @@ namespace test {
 
 		Diff2wheelSpeed control_input{0.0, 0.0};
 
+		auto sim_clock = MyClock::make();
+		auto robo_clock = MyClock::make();
 		// メインループ
 		while(stop_flag.load()) {
 			// calc world /////////////////////////////////////////////////////////////////////////
-			const auto sensor_data = sim_update(sim_cons, sim_state, control_input);
+
+			const auto sensor_data = sim_update(sim_cons, sim_state, control_input, 0.1);
 			// const auto sensor_data = node.update(control_input);
 
 			// calc robot /////////////////////////////////////////////////////////////////////////
-			control_input = robot_update(rb_cons, rb_state, sensor_data.laserscan);
+			control_input = robot_update(rb_cons, rb_state, sensor_data.laserscan, 0.1);
 
 			// snapshot ///////////////////////////////////////////////////////////////////////////
 			// sim_state.snap(logger);
