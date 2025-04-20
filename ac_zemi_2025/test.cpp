@@ -8,8 +8,9 @@
 #include "sparse_matrix.hpp"
 #include "icp_on_svd.hpp"
 #include "global_map.hpp"
-#include "simulator.hpp"
 #include "diff2_pure_pursuit.hpp"
+#include "simulator.hpp"
+// #include "ros_world.hpp"
 
 namespace test {
 	using Eigen::Matrix2Xd;
@@ -19,8 +20,9 @@ namespace test {
 	using namespace ac_zemi_2025::geometry;
 	using namespace ac_zemi_2025::icp_on_svd;
 	using namespace ac_zemi_2025::global_map;
-	using namespace ac_zemi_2025::simulator;
 	using namespace ac_zemi_2025::diff2_carrot_pursuit;
+	using namespace ac_zemi_2025::simulator;
+	// using namespace ac_zemi_2025::ros_world;
 
 	// 差動二輪ロボの定数と状態
 	struct RobotConstant final {
@@ -82,6 +84,7 @@ namespace test {
 		/// @todo 外界の初期化
 		SimulatorConstant sim_cons{};
 		SimulatorState sim_state{};
+		// RosWorld node{};
 
 		/// @todo ロボットの初期化
 		RobotConstant rb_cons{};
@@ -93,6 +96,7 @@ namespace test {
 		while(stop_flag.load()) {
 			// calc world /////////////////////////////////////////////////////////////////////////
 			const auto sensor_data = sim_update(sim_cons, sim_state, control_input);
+			// const auto sensor_data = node.update(control_input);
 
 			// calc robot /////////////////////////////////////////////////////////////////////////
 			control_input = robot_update(rb_cons, rb_state, sensor_data.laserscan);
