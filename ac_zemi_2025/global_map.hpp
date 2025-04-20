@@ -17,103 +17,90 @@ namespace ac_zemi_2025::global_map::impl {
 	using utility::Pose2d;
 	using sparse_matrix::Csr;
 
-	/// @brief グローバル座標系でのマップから、ローカル座標系での可視なマップを計算
-	/// マップの各曲線は重複せず、またそれぞれ曲線は交点を端点以外に持たないようにしておく
-	/// -> @todo: 上の制約はどうせ時々凡ミスで破られるので、適宜assertやstd::expectedなどを入れる必要あり
-	/// make_visible_linesの計算量はO(NlogN)、ソート分となる
-	/// 今後、マップにあるのが線分だけで無くなった場合、Csrをテンプレートにし、各辺に線分情報を持たせると良い
-	/// -> 上のが綺麗に書けそうな予感あり、吐き気、帰宅
+	template<class Edge_> requires
+	requires(Edge_ edge) {
+		/// @todo
+		requires true;
+	}
 	struct GlobalMap final {
-		Csr edges;
+		Csr<Edge_> edges;
 		std::vector<Vector2d> positions;
 
+		/// @brief グローバル座標系でのマップから、ローカル座標系での可視なマップを計算
+		/// マップの各曲線は重複せず、またそれぞれ曲線は交点を端点以外に持たないようにしておく
+		/// -> @todo: 上の制約はどうせ時々凡ミスで破られるので、適宜assertやstd::expectedなどを入れる必要あり
+		///   -> や、上の制約を満たすようにGlobalMapを構築する関数を書くべきか
+		/// make_visible_linesの計算量は、端点数をNとして O(NlogN)。ソート分となる
 		auto make_visible_lines(const Pose2d& pose) const noexcept -> std::vector<Line2d> {
 			const i64 n = this->positions.size();
 			const auto global2local = pose.homogeneus_transform().inverse();
 
-			constexpr auto ang = [](const Vector2d& v) -> double {
-				return std::atan2(v(1), v(0));
+			// マップ曲線をローカル極座標系に持ってくる
+			struct RThetaVertex final {
+				double r2;
+				double th;
+				i64 idx;
+
+				friend constexpr auto operator<=>(const RThetaVertex&, const RThetaVertex&) = default;
+				friend constexpr auto operator==(const RThetaVertex&, const RThetaVertex&) -> bool = default;
 			};
-			
-			// マップ曲線をローカル座標系に持ってきて、thetaでソート
-			std::vector<std::tuple<double, double, i64>> local_rtheta{};
-			local_rtheta.reserve(n);
+			std::vector<RThetaVertex> local_vertices{};
+			local_vertices.reserve(n);
 			for(i64 i = 0; i < n; ++i) {
 				const Vector2d pos = global2local * this->positions[i];
-				local_rtheta.emplace_back(pos.squaredNorm(), ang(pos), i);
+				const double r2 = pos.squaredNorm();
+				const double th = std::atan2(pos(1), pos(0));
+				local_vertices.emplace_back(r2, th, i);
 			}
 			
-			std::ranges::sort(local_rtheta, [](const auto& l, const auto& r) -> bool {
-				const auto [r_l, th_l, idx_l] = l;
-				const auto [r_r, th_r, idx_r] = r;
-				return th_l != th_r ? th_l < th_r :
-					r_l != r_r ? r_l < r_r :
-					idx_l < idx_r
+			// theta, r2, idxの順の辞書式ソート
+			std::ranges::sort(local_vertices, [](const RThetaVertex& l, const RThetaVertex& r) -> bool {
+				return l.th != r.th ? l.th < r.th :
+					l.r2 != r.r2 ? l.r2 < r.r2 :
+					l.idx < r.idx
 				;
 			});
 
-			std::vector<Line2d> ret{};
-			std::vector<i64> connected_vertices{};
-			ret.reserve(n);
-			connected_vertices.reserve(n);
+			// idxから頂点を取得するための配列
+			std::vector<i64> inv_indices(n);
+			for(i64 i = 0; i < n; ++i) {
+				inv_indices[local_vertices[i].idx] = i;
+			}
+			constexpr auto get = [&local_vertices, &inv_indices](const i64 idx) noexcept -> RThetaVertex {
+				return local_vertices[inv_indices[idx]];
+			};
 
-			// 可視な線分を見つけていく
-			// 途中途中、thetaの増減で向きつけしたDAGを考えることがある
-			auto iter = local_rtheta.cbegin();
-			while(iter != local_rtheta.cend()) {
+			std::vector<Edge_> ret{};
+			ret.reserve(n);
+
+			// thの小さいほうから、可視な曲線を見つけていく
+			i64 leftmost_idx = 0;
+			while(leftmost_idx < n) {
 				// DAGの隣接頂点の中で最も原点に近いものを次々選んでいく
-				i64 idx = std::get<2>(*iter);
-				auto nexts = this->edges.c_row(idx);
-				connected_vertices.emplace_back(idx);
-				while(!nexts.empty()) {
-					const auto next_idx = nexts.front();
-					if(ang(this->positions[next_idx]) < ang(this->positions[idx])) break;
-					connected_vertices.emplace_back(next_idx);
+				i64 last_idx = leftmost_idx;
+				auto nexts = this->edges.c_row(last_idx);
+				while(nexts.size() > 1) {
+					std::optional<std::pair<usize_t, const Edge_&>> next{std::nullopt};
+					for(const auto& [idx, edge] : nexts) {
+					// 一つ前やthetaが減る向きに戻ろうとしないよう注意
+					if(idx == last_idx || get(idx).th < get(last_idx).th) continue;
+						const auto& [next_idx, _] = *next;
+						if(!next.has_value() || get(idx).r < get(next_idx).r) {
+							next = {idx, edge};
+						}
+					}
+					if(!next.has_value()) break;
+
+					const auto [next_idx, edge] = *next;
+					ret.emplace_back(edge);
+					last_idx = next_idx;
 					nexts = this->edges.c_row(next_idx);
 				}
-				
-				// 繋がってる点をretに追加していく
-				/// @todo: ここはCsr<E>にしたなら、各辺に持たせた曲線情報を使ってやるといい
-				for(i64 i = 0; i < i64(connected_vertices.size()) - 1; ++i) {
-					ret.emplace_back(Line2d{this->positions[connected_vertices[i]], this->positions[connected_vertices[i + 1]]});
-				}
 
-				const i64 last = connected_vertices.back();  // こことか特に事前条件の漏れで死にそう
-				connected_vertices.clear();
-				iter = std::ranges::upper_bound(local_rtheta, ang(this->positions[last]), {}, [](const auto& tup){return std::get<1>(tup);});
+				leftmost_idx = last_idx + 1;
 			}
 
 			return ret;
 		}
 	};
-
-	
-	inline auto make_visible_lines(const auto& map, const Pose2d& pose) noexcept -> std::vector<Line2d> {
-		// 末尾には先頭の点を入れておく
-		const auto map_local = map.to_local_rtheta(pose);
-
-		std::vector<Line2d> ret{};
-		std::vector<Line2d> connected_vertices{};
-		/// @todo ret.reserve(??);
-		/// @todo connected_vertices.reserve(??);
-		auto iter = map_local.vertices.begin();
-		while(iter != map.vertices.end()) {
-			auto v = map_local.get_vertex(iter->idx);
-			while(true) {
-				connected_vertices.emplace_back(v);
-				if(const auto next_opt = map_local.next(v)) {
-					v = *next_opt;
-				}
-				else break;
-			}
-
-			for(int i = 0; i < int(connected_vertices.size()) - 1; ++i) {
-				ret.emplace_back(map_local.vertices[i].xy, map_local.vertices[i + 1].xy);
-			}
-
-			iter = map_local.next_by_r(iter);
-		}
-
-		return ret;
-	}
 }
