@@ -65,6 +65,9 @@ namespace test {
 		/// @todo グローバルな図形情報を読み出し
 		const auto shapes = std::vector<Line2d>{};
 
+		/// @todo ルート情報を読み出し
+		const auto route = std::vector<Vector2d>{};
+
 		// グローバルマップを生成
 		const auto map = GlobalMap<Line2d>::from_shapes(shapes);
 
@@ -84,8 +87,7 @@ namespace test {
 		RobotConstant rb_cons{};
 		RobotState rb_state{};
 
-		/// @todo 初期値の設定
-		Diff2wheelSpeed control_input{};
+		Diff2wheelSpeed control_input{0.0, 0.0};
 
 		// メインループ
 		while(stop_flag.load()) {
