@@ -13,8 +13,8 @@ namespace ac_zemi_2025::geometry::impl {
 	template<class T_>
 	concept edge = requires(const T_ e1, const T_ e2, const Vector2d p) {
 		{intersect(e1, e2)} -> std::same_as<std::vector<Vector2d>>;
-		{dis_p2e(p, e1)} -> std::same_as<double>;
-		{dis_e2e(e1, e2)} -> std::same_as<double>;
+		{closest_p2e(p, e1)} -> std::same_as<std::pair<Vector2d, double>>;
+		{closest_e2e(e1, e2)} -> std::same_as<std::tuple<Vector2d, Vector2d, double>>;
 	};
 
 	// 姿勢
@@ -43,7 +43,14 @@ namespace ac_zemi_2025::geometry::impl {
 		Vector2d p2;
 	};
 
-	inline constexpr auto dis_p2e(const Vector2d& part, const Line2d& whole) noexcept -> std::pair<Vector2d, double> {
+	inline constexpr auto intersect(const Line2d& l, const Line2d& r) noexcept -> std::vector<Vector2d> {
+		/// @todo 実装
+		(void) l;
+		(void) r;
+		return {};
+	}
+
+	inline constexpr auto closest_p2e(const Vector2d& part, const Line2d& whole) noexcept -> std::pair<Vector2d, double> {
 		const auto segment = whole.p2 - whole.p1;
 		const auto from_p1 = part - whole.p1;
 		const auto to_p2 = whole.p2 - part;
@@ -60,7 +67,7 @@ namespace ac_zemi_2025::geometry::impl {
 		}
 	}
 
-	inline constexpr auto dis_e2e(const Line2d& part, const Line2d& whole) noexcept -> double {
+	inline constexpr auto closest_e2e(const Line2d& part, const Line2d& whole) noexcept -> std::tuple<Vector2d, Vector2d, double> {
 		/// @todo
 		/// partを含む直線にwholeの端点からwholeに直交する向きにおろした2直線とpartを含む直線との交点p, qを考え、
 		/// pからqの範囲内では「wholeを含む直線との距離」を、範囲外では「wholeの端点との距離」をpartに沿って線積分する
@@ -71,7 +78,7 @@ namespace ac_zemi_2025::geometry::impl {
 		/// となる、はず
 		(void) part;
 		(void) whole;
-		return 0.0;  // 仮
+		return {};  // 仮
 	}
 
 	struct Polyline final {
@@ -80,8 +87,9 @@ namespace ac_zemi_2025::geometry::impl {
 }
 
 namespace ac_zemi_2025::geometry {
+	using impl::edge;
 	using impl::Line2d;
 	using impl::Pose2d;
-	using impl::dis_p2e;
-	using impl::dis_e2e;
+	using impl::closest_p2e;
+	using impl::closest_e2e;
 }

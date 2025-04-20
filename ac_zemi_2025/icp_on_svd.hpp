@@ -30,12 +30,12 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 
 	using geometry::Line2d;
 	using geometry::Pose2d;
-	using geometry::dis_e2e;
-	using geometry::dis_p2e;
+	using geometry::closest_e2e;
+	using geometry::closest_p2e;
 
 	/// @brief 点群を線分群にfittingする ICP on SVD
 	/// 線分数は点数に比べ十分少ないとする
-	inline auto icp_p2l(Matrix2Xd from, std::vector<Line2d> to) noexcept -> Pose2d {
+	inline auto icp_p2l(Matrix2Xd from, std::vector<Line2d> to, const i64 number_of_iteration) noexcept -> Pose2d {
 
 		// fromを、重心を原点とする座標系に直す
 		const auto from_mean = from.rowwise().mean();
@@ -45,13 +45,13 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 		// fromをclosest_pointsに合わせる変換を計算し、その変換を合成、toに適用していく
 		auto closest_points = Matrix2Xd{from.rows(), from.cols()};
 		auto total_transform = Isometry2d::Identity();
-		for(i64 iloop = 0; iloop < 50; iloop++) {  // とりあえず50回
+		for(i64 iloop = 0; iloop < number_of_iteration; iloop++) {  // とりあえず50回
 			// fromの各点の最近接点を求める
 			for(i64 ip = 0; ip < i64(from.cols()); ++ip) {
 				Vector2d closest_point{};
 				double closest_distance = std::numeric_limits<double>::infinity();
 				for (i64 iq = 0; iq < i64(to.size()); iq++) {
-					const auto [point, distance] = dis_p2e(from.col(ip), to[iq]);
+					const auto [point, distance] = closest_p2e(from.col(ip), to[iq]);
 					if(distance < closest_distance) {
 						closest_distance = distance;
 						closest_point = point;
@@ -107,9 +107,5 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 }
 
 namespace ac_zemi_2025::icp_on_svd {
-	using impl::Pose2d;
-	using impl::Line2d;
-	using impl::dis_e2e;
-	using impl::dis_p2e;
 	using impl::icp_p2l;
 }

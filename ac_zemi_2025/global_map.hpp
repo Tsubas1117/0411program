@@ -15,6 +15,7 @@
 namespace ac_zemi_2025::global_map::impl {
 	using Eigen::Vector2d;
 	
+	using geometry::edge;
 	using geometry::Line2d;
 	using geometry::Pose2d;
 	using sparse_matrix::Csr;
@@ -22,11 +23,7 @@ namespace ac_zemi_2025::global_map::impl {
 	/// マップの各曲線は重複せず、またそれぞれ曲線は交点を端点以外に持たないようにしておく
 	/// -> @todo: 上の制約はどうせ時々凡ミスで破られるので、適宜assertやstd::expectedなどを入れる必要あり
 	///   -> や、上の制約を満たすようにGlobalMapを構築する関数を書くべきか
-	template<class Edge_> requires
-	requires(Edge_ edge) {
-		/// @todo
-		requires true;
-	}
+	template<edge Edge_>
 	struct GlobalMap final {
 		Csr<Edge_> edges;
 		std::vector<Vector2d> positions;

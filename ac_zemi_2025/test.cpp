@@ -28,6 +28,7 @@ namespace test {
 		std::vector<Vector2d> route;
 		Diff2CarrotPursuit carrot;
 		double dt;
+		i64 number_of_iteration;
 	};
 	struct RobotState final {
 		Pose2d pose;
@@ -46,7 +47,7 @@ namespace test {
 			e.p1 = g2l_old * e.p1;
 			e.p2 = g2l_old * e.p2;
 		}
-		const auto new_pose = icp_p2l(laserscan, visible_edges);
+		const auto new_pose = icp_p2l(laserscan, visible_edges, cons.number_of_iteration);
 
 		// calc control input /////////////////////////////////////////////////////////////////////
 		const auto speed = cons.carrot.update(cons.route, new_pose, state.closest_milestone_index);
