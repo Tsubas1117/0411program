@@ -27,6 +27,14 @@ namespace ac_zemi_2025::geometry::impl {
 			ret.rotate(this->th).pretranslate(this->xy);
 			return ret;
 		}
+
+		friend constexpr auto operator*(const Pose2d& l, const double r) noexcept -> Pose2d {
+			return Pose2d{l.xy * r, l.th * r};
+		}
+
+		friend constexpr auto operator+(const Pose2d& l, const Pose2d& r) noexcept -> Pose2d {
+			return Pose2d{l.xy + r.xy, l.th + r.th};
+		}
 	};
 
 	// 端点2つによる線分表現
