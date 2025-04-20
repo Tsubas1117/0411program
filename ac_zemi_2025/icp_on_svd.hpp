@@ -19,6 +19,7 @@
 #include <eigen3/Eigen/Dense>
 
 #include "utility.hpp"
+#include "geometry.hpp"
 
 namespace ac_zemi_2025::icp_on_svd::impl {
 	using Eigen::Matrix2Xd;
@@ -27,10 +28,10 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 	using Eigen::Isometry2d;
 	using Eigen::JacobiSVD;
 
-	using utility::Line2d;
-	using utility::Pose2d;
-	using utility::distance_l2l;
-	using utility::distance_p2l;
+	using geometry::Line2d;
+	using geometry::Pose2d;
+	using geometry::dis_e2e;
+	using geometry::dis_p2e;
 
 	/// @brief 点群を線分群にfittingする ICP on SVD
 	/// 線分数は点数に比べ十分少ないとする
@@ -50,7 +51,7 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 				Vector2d closest_point{};
 				double closest_distance = std::numeric_limits<double>::infinity();
 				for (i64 iq = 0; iq < i64(to.size()); iq++) {
-					const auto [point, distance] = distance_p2l(from.col(ip), to[iq]);
+					const auto [point, distance] = dis_p2e(from.col(ip), to[iq]);
 					if(distance < closest_distance) {
 						closest_distance = distance;
 						closest_point = point;
@@ -108,7 +109,7 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 namespace ac_zemi_2025::icp_on_svd {
 	using impl::Pose2d;
 	using impl::Line2d;
-	using impl::distance_l2l;
-	using impl::distance_p2l;
+	using impl::dis_e2e;
+	using impl::dis_p2e;
 	using impl::icp_p2l;
 }

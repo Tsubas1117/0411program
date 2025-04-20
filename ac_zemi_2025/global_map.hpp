@@ -9,15 +9,19 @@
 #include <eigen3/Eigen/Dense>
 
 #include "utility.hpp"
+#include "geometry.hpp"
 #include "sparse_matrix.hpp"
 
 namespace ac_zemi_2025::global_map::impl {
 	using Eigen::Vector2d;
 	
-	using utility::Line2d;
-	using utility::Pose2d;
+	using geometry::Line2d;
+	using geometry::Pose2d;
 	using sparse_matrix::Csr;
 
+	/// マップの各曲線は重複せず、またそれぞれ曲線は交点を端点以外に持たないようにしておく
+	/// -> @todo: 上の制約はどうせ時々凡ミスで破られるので、適宜assertやstd::expectedなどを入れる必要あり
+	///   -> や、上の制約を満たすようにGlobalMapを構築する関数を書くべきか
 	template<class Edge_> requires
 	requires(Edge_ edge) {
 		/// @todo
@@ -27,12 +31,15 @@ namespace ac_zemi_2025::global_map::impl {
 		Csr<Edge_> edges;
 		std::vector<Vector2d> positions;
 
+		/// @brief 曲線群からGlobalMapを生成
+		static auto from_shapes(const std::vector<Edge_>& shapes) noexcept -> GlobalMap {
+			
+		}
+
 		/// @brief グローバル座標系でのマップから、ローカル座標系での可視なマップを計算
-		/// マップの各曲線は重複せず、またそれぞれ曲線は交点を端点以外に持たないようにしておく
-		/// -> @todo: 上の制約はどうせ時々凡ミスで破られるので、適宜assertやstd::expectedなどを入れる必要あり
-		///   -> や、上の制約を満たすようにGlobalMapを構築する関数を書くべきか
 		/// make_visible_linesの計算量は、端点数をNとして O(NlogN)。ソート分となる
-		auto make_visible_lines(const Pose2d& pose) const noexcept -> std::vector<Line2d> {
+		/// @attention 出てくる曲線群はローカル座標系でなくグローバル座標系に載っていることに注意
+		auto make_visible_lines(const Pose2d& pose) const noexcept -> std::vector<Edge_> {
 			const i64 n = this->positions.size();
 			const auto global2local = pose.homogeneus_transform().inverse();
 
