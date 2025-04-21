@@ -43,12 +43,7 @@ namespace test {
 		const auto pose = state.pose;
 
 		// ICP on SVD /////////////////////////////////////////////////////////////////////////////
-		auto visible_edges = cons.map.make_visible_lines(pose);
-		const auto g2l_old = pose.homogeneus_transform().inverse();
-		for(auto& e : visible_edges) {
-			e.p1 = g2l_old * e.p1;
-			e.p2 = g2l_old * e.p2;
-		}
+		const auto visible_edges = cons.map.make_visible_lines(pose);
 		const auto new_pose = icp_p2l(laserscan, visible_edges, cons.number_of_iteration);
 
 		// calc control input /////////////////////////////////////////////////////////////////////

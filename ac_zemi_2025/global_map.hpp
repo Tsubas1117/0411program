@@ -21,8 +21,6 @@ namespace ac_zemi_2025::global_map::impl {
 	using sparse_matrix::Csr;
 
 	/// マップの各曲線は重複せず、またそれぞれ曲線は交点を端点以外に持たないようにしておく
-	/// -> @todo: 上の制約はどうせ時々凡ミスで破られるので、適宜assertやstd::expectedなどを入れる必要あり
-	///   -> や、上の制約を満たすようにGlobalMapを構築する関数を書くべきか
 	template<edge Edge_>
 	struct GlobalMap final {
 		Csr<Edge_> edges;
@@ -35,9 +33,13 @@ namespace ac_zemi_2025::global_map::impl {
 			return {};
 		}
 
+		/// @todo 根本から見直す必要あり。
+		/// thetaでソート後、一つずつ頂点を舐める必要がある
+		/// dr/dthetaが0になる点で分割する必要がある
+		/// 
 		/// @brief グローバル座標系でのマップから、ローカル座標系での可視なマップを計算
 		/// make_visible_linesの計算量は、端点数をNとして O(NlogN)。ソート分となる
-		/// @attention 出てくる曲線群はローカル座標系でなくグローバル座標系に載っていることに注意
+		/// @todo 一部でも見える曲線は全て載せてしまっている。手前の曲線の端点を通る光線で、奥の曲線をぶった切るべき
 		auto make_visible_lines(const Pose2d& pose) const noexcept -> std::vector<Edge_> {
 			const i64 n = this->positions.size();
 			const auto global2local = pose.homogeneus_transform().inverse();
@@ -109,6 +111,9 @@ namespace ac_zemi_2025::global_map::impl {
 
 				leftmost_idx = last_idx + 1;
 			}
+
+			// ローカル座標系に変換
+			/// @todo 実装
 
 			return ret;
 		}
