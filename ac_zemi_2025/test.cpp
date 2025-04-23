@@ -12,6 +12,7 @@
 #include "read_edges.hpp"
 // #include "global_map.hpp"
 #include "ros_world.hpp"
+#include "carrot_pursuit.hpp"
 
 namespace test {
 	using Eigen::Matrix2Xd;
@@ -23,11 +24,13 @@ namespace test {
 	using namespace ac_zemi_2025::read_edges;
 	// using namespace ac_zemi_2025::global_map;
 	using namespace ac_zemi_2025::ros_world;
+	using namespace ac_zemi_2025::carrot_pursuit;
 
-	// 差動二輪ロボの定数と状態
+	// ロボの定数と状態
 	struct RobotConstant final {
 		std::vector<Line2d> global_edges;
-		std::vector<Vector2d> route;
+		Polyline2d route;
+		CarrotPursuit carrot;
 		i64 number_of_iteration;
 	};
 	struct RobotState final {
@@ -37,33 +40,28 @@ namespace test {
 
 	// ロボの更新式
 	inline auto robot_update(const RobotConstant& cons, RobotState& state, const Matrix2Xd& laserscan, const double dt) noexcept(false) -> Pose2d {
-		// // read state /////////////////////////////////////////////////////////////////////////////
-		// const auto pose = state.pose;
+		// read state /////////////////////////////////////////////////////////////////////////////
+		const auto pose = state.pose;
 
-		// // ICP on SVD /////////////////////////////////////////////////////////////////////////////
-		// // const auto visible_edges = cons.map.make_visible_lines(pose);
-		// const auto g2l = pose.homogeneus_transform().inverse();
-		// auto edges = cons.global_edges;
-		// for(auto& edge : edges) {
-		// 	edge = Line2d{g2l * edge.p1, g2l * edge.p2};
-		// }
-		// const auto new_pose = icp_p2l(laserscan, edges, cons.number_of_iteration);
+		// ICP on SVD /////////////////////////////////////////////////////////////////////////////
+		// const auto visible_edges = cons.map.make_visible_lines(pose);
+		const auto g2l = pose.homogeneus_transform().inverse();
+		auto edges = cons.global_edges;
+		for(auto& edge : edges) {
+			edge = Line2d{g2l * edge.p1, g2l * edge.p2};
+		}
+		const auto new_pose = icp_p2l(laserscan, edges, cons.number_of_iteration);
 
-		// // calc control input /////////////////////////////////////////////////////////////////////
-		// const auto speed = cons.carrot.update(cons.route, new_pose, state.closest_milestone_index);
-		// if(!speed.has_value()) {
-		// 	throw std::runtime_error{"Panic: cannot calc speed by carrot pursuit."};
-		// }
+		// calc control input /////////////////////////////////////////////////////////////////////
+		const auto speed = cons.carrot.update(cons.route.vertices, new_pose, state.closest_milestone_index);
+		if(!speed.has_value()) {
+			throw std::runtime_error{"Panic: cannot calc speed by carrot pursuit."};
+		}
 
-		// // update state ///////////////////////////////////////////////////////////////////////////
-		// state.pose = new_pose + speed->to_pose2d_velocity(new_pose) * dt;
+		// update state ///////////////////////////////////////////////////////////////////////////
+		state.pose = new_pose + *speed * dt;
 
-		// return *speed;
-		(void) cons;
-		(void) state;
-		(void) laserscan;
-		(void) dt;
-		return {};
+		return *speed;
 	}
 
 	struct MyClock final {
@@ -88,8 +86,8 @@ namespace test {
 	void main() {
 		using namespace std::string_view_literals;
 
-		/// @todo グローバルな図形情報を読み出し
-		const std::vector<Line2d> global_walls = [] {
+		/// グローバルな図形情報を読み出し
+		std::vector<Line2d> global_edges = [] {
 			if(const auto res = read_edges("data/field.dat"sv)) {
 				std::vector<Line2d> ret{};
 				for(const auto& polygon : res.value()) {
@@ -105,8 +103,8 @@ namespace test {
 			}
 		}();
 
-		/// @todo ルート情報を読み出し
-		const Polyline2d route = [] {
+		/// ルート情報を読み出し
+		Polyline2d route = [] {
 			if(const auto res = read_route("data/test_route.dat"sv)) {
 				return res.value();
 			}
@@ -115,7 +113,7 @@ namespace test {
 			}
 		}();
 
-		// // グローバルマップを生成
+		// /// @todo グローバルマップを生成
 		// const auto map = GlobalMap<Line2d>::from_shapes(shapes);
 
 		// 終了用のキー受付
@@ -127,23 +125,34 @@ namespace test {
 		}};
 
 		// /// @todo 外界の初期化
-		// RosWorld node{};
+		RosWorld node{};
 
-		// /// @todo ロボットの初期化
-		// RobotConstant rb_cons{};
-		// RobotState rb_state{};
+		/// ロボットの初期化
+		RobotConstant rb_cons {
+			.global_edges = std::move(global_edges)
+			, .route = std::move(route)
+			, .carrot = CarrotPursuit {
+				.distance_threshold = 5
+				, .speed_determination_destination = 0
+			}
+			, .number_of_iteration = 50
+		};
+		RobotState rb_state {
+			.pose = Pose2d{Vector2d::Zero(), 0.0}
+			, .closest_milestone_index = 0
+		};
 
-		// Diff2wheelSpeed control_input{0.0, 0.0};
+		Pose2d control_input{Vector2d::Zero(), 0.0};
 
-		// auto sim_clock = MyClock::make();
-		// auto robo_clock = MyClock::make();
+		auto sim_clock = MyClock::make();
+		auto robo_clock = MyClock::make();
 		// メインループ
 		while(stop_flag.load()) {
 			// calc world /////////////////////////////////////////////////////////////////////////
-			// const auto sensor_data = node.update(control_input);
+			const auto laserscan = node.update(control_input, sim_clock.lap().count());
 
 			// calc robot /////////////////////////////////////////////////////////////////////////
-			// control_input = robot_update(rb_cons, rb_state, sensor_data.laserscan, 0.1);
+			control_input = robot_update(rb_cons, rb_state, laserscan, robo_clock.lap().count());
 
 			// snapshot ///////////////////////////////////////////////////////////////////////////
 			// sim_state.snap(logger);
