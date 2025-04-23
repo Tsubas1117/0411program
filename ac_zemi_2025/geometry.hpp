@@ -81,8 +81,45 @@ namespace ac_zemi_2025::geometry::impl {
 		return {};  // 仮
 	}
 
-	struct Polyline final {
+	/// @brief 直線
+	struct Ray2d final {
+		Vector2d start;
+		Vector2d direction;
+	};
+
+	/// @brief 折れ線
+	struct Polyline2d final {
 		std::vector<Vector2d> vertices;
+
+		auto to_edges() const noexcept -> std::vector<Line2d> {
+			const i64 m = this->vertices.size() - 1;
+			std::vector<Line2d> edges(m);
+			Vector2d last = this->vertices[0];
+			for(i64 i = 1; i < m; ++i) {
+				edges[i] = Line2d{last, this->vertices[i]};
+				last = this->vertices[i];
+			}
+
+			return edges;
+		}
+	};
+
+	/// @brief 閉じてる折れ線
+	struct Polygon2d final {
+		std::vector<Vector2d> vertices;
+
+		auto to_edges() const noexcept -> std::vector<Line2d> {
+			const i64 m = this->vertices.size();
+			std::vector<Line2d> edges(m);
+			Vector2d last = this->vertices[0];
+			for(i64 i = 0; i < m - 1; ++i) {
+				edges[i] = Line2d{last, this->vertices[i + 1]};
+				last = this->vertices[i + 1];
+			}
+			edges[m - 1] = Line2d{last, this->vertices[0]};
+
+			return edges;
+		}
 	};
 }
 
@@ -90,6 +127,9 @@ namespace ac_zemi_2025::geometry {
 	using impl::edge;
 	using impl::Line2d;
 	using impl::Pose2d;
+	using impl::Ray2d;
+	using impl::Polyline2d;
+	using impl::Polygon2d;
 	using impl::closest_p2e;
 	using impl::closest_e2e;
 }

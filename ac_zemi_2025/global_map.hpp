@@ -24,18 +24,19 @@ namespace ac_zemi_2025::global_map::impl {
 	template<edge Edge_>
 	struct GlobalMap final {
 		Csr<Edge_> edges;
-		std::vector<Vector2d> positions;
+		std::vector<Vector2d> vertices;
 
 		/// @brief 曲線群からGlobalMapを生成
-		static auto from_shapes(const std::vector<Edge_>& shapes) noexcept -> GlobalMap {
-			/// @todo 実装
-			(void) shapes;
-			return {};
+		static auto from_shapes(const auto&) noexcept -> GlobalMap {
+			
 		}
 
 		/// @todo 根本から見直す必要あり。
 		/// thetaでソート後、一つずつ頂点を舐める必要がある
-		/// dr/dthetaが0になる点で分割する必要がある
+		/// dr/dthetaが発散する点で分割する必要がある
+		/// 図形処理の流れとしては、
+		/// --ユーザー入力--> 基本図形 --ロボットが動く前--> 交点列挙
+		/// --毎ループ(ローカル極座標変換、dtheta/dr==0で分割、thetaでスイープ)--> ローカル直交座標での各辺
 		/// 
 		/// @brief グローバル座標系でのマップから、ローカル座標系での可視なマップを計算
 		/// make_visible_linesの計算量は、端点数をNとして O(NlogN)。ソート分となる
