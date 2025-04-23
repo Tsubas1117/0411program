@@ -1,3 +1,6 @@
 /main
 /.vscode
 *.exe
+/data/
+/py/uv.lock
+/py/.venv
