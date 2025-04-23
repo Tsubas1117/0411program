@@ -10,11 +10,11 @@ namespace ac_zemi_2025::ros_world::impl {
 
 	struct RosWorld final : rclcpp::Node {
 		Matrix2Xd laserscan{};
-		rclcpp::Publisher<void/** @todo */>::SharePtr robot_speed_pub;
+		rclcpp::Publisher<void/** @todo 自作のメッセージ型を推奨 */>::SharePtr robot_speed_pub;
 		rclcpp::Subscriber<sensor_msgs::msg::LaserScan>::SharePtr lidar_sub;
 
 		Ros2Node():
-			rclcpp::Node(/** @todo */)
+			rclcpp::Node{/** @todo */}
 			, robot_speed_pub{/** @todo */}
 			, lidar_sub{/** @todo */}
 		{}
