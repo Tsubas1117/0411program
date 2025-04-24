@@ -6,7 +6,7 @@
 
 #include <eigen3/Eigen/Dense>
 
-namespace ac_zemi_2025::geometry::impl {
+namespace ac_semi_2025::geometry::impl {
 	using Eigen::Vector2d;
 	using Eigen::Isometry2d;
 
@@ -123,7 +123,7 @@ namespace ac_zemi_2025::geometry::impl {
 	};
 }
 
-namespace ac_zemi_2025::geometry {
+namespace ac_semi_2025::geometry {
 	using impl::edge;
 	using impl::Line2d;
 	using impl::Pose2d;

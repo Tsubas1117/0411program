@@ -13,7 +13,7 @@
 #include "geometry.hpp"
 #include "flie_chainer.hpp"
 
-namespace ac_zemi_2025::read_edges::impl {
+namespace ac_semi_2025::read_edges::impl {
 	using Eigen::Vector2d;
 
 	using geometry::Line2d;
@@ -112,7 +112,7 @@ namespace ac_zemi_2025::read_edges::impl {
 	}
 }
 
-namespace ac_zemi_2025::read_edges {
+namespace ac_semi_2025::read_edges {
 	using impl::read_route;
 	using impl::read_edges;
 }

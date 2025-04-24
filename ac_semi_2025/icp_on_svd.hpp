@@ -21,7 +21,7 @@
 #include "utility.hpp"
 #include "geometry.hpp"
 
-namespace ac_zemi_2025::icp_on_svd::impl {
+namespace ac_semi_2025::icp_on_svd::impl {
 	using Eigen::Matrix2Xd;
 	using Eigen::Matrix2d;
 	using Eigen::Vector2d;
@@ -117,7 +117,7 @@ namespace ac_zemi_2025::icp_on_svd::impl {
 	}
 }
 
-namespace ac_zemi_2025::icp_on_svd {
+namespace ac_semi_2025::icp_on_svd {
 	using impl::icp_p2l;
 	using impl::icp_e2e;
 }

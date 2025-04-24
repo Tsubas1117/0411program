@@ -7,7 +7,7 @@
 #include <expected>
 #include "utility.hpp"
 
-namespace ac_zemi_2025::file_chainer {
+namespace ac_semi_2025::file_chainer {
 	enum class SeekOrigin: int {
 		set = SEEK_SET
 		, cur = SEEK_CUR

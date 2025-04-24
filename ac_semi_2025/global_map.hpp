@@ -12,7 +12,7 @@
 #include "geometry.hpp"
 #include "sparse_matrix.hpp"
 
-namespace ac_zemi_2025::global_map::impl {
+namespace ac_semi_2025::global_map::impl {
 	using Eigen::Vector2d;
 	
 	using geometry::edge;
@@ -121,6 +121,6 @@ namespace ac_zemi_2025::global_map::impl {
 	};
 }
 
-namespace ac_zemi_2025::global_map {
+namespace ac_semi_2025::global_map {
 	using impl::GlobalMap;
 }

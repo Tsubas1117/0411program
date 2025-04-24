@@ -8,7 +8,7 @@
 
 #include "utility.hpp"
 
-namespace ac_zemi_2025::sparse_matrix {
+namespace ac_semi_2025::sparse_matrix {
 
 	template<class E_ = void>
 	struct Csr final {

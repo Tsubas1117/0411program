@@ -8,7 +8,7 @@
 #include "utility.hpp"
 #include "geometry.hpp"
 
-namespace ac_zemi_2025::carrot_pursuit::impl {
+namespace ac_semi_2025::carrot_pursuit::impl {
 	using Eigen::Isometry2d;
 	using Eigen::Vector2d;
 
@@ -55,6 +55,6 @@ namespace ac_zemi_2025::carrot_pursuit::impl {
 	};
 }
 
-namespace ac_zemi_2025::carrot_pursuit {
+namespace ac_semi_2025::carrot_pursuit {
 	using impl::CarrotPursuit;
 }

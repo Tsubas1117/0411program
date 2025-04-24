@@ -5,7 +5,7 @@
 #include <eigen3/Eigen/Dense>
 #include <rclcpp/rclcpp.hpp>
 
-namespace ac_zemi_2025::ros_world::impl {
+namespace ac_semi_2025::ros_world::impl {
 	using Eigen::Matrix2Xd;
 
 	struct RosWorld final : rclcpp::Node {
@@ -34,6 +34,6 @@ namespace ac_zemi_2025::ros_world::impl {
 	};
 }
 
-namespace ac_zemi_2025::ros_world {
+namespace ac_semi_2025::ros_world {
 	using impl::RosWorld;
 }

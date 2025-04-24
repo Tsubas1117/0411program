@@ -14,7 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace ac_zemi_2025::integer_type {
+namespace ac_semi_2025::integer_type {
 	using i64 = std::int64_t;
 	using i32 = std::int32_t;
 	using u32 = std::uint32_t;
@@ -22,6 +22,6 @@ namespace ac_zemi_2025::integer_type {
 	using usize = std::size_t;
 }
 
-namespace ac_zemi_2025 {
+namespace ac_semi_2025 {
 	using namespace integer_type;
 }

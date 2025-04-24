@@ -18,13 +18,13 @@ namespace test {
 	using Eigen::Matrix2Xd;
 	using Eigen::Vector2d;
 
-	using namespace ac_zemi_2025::integer_type;
-	using namespace ac_zemi_2025::geometry;
-	using namespace ac_zemi_2025::icp_on_svd;
-	using namespace ac_zemi_2025::read_edges;
-	// using namespace ac_zemi_2025::global_map;
-	using namespace ac_zemi_2025::ros_world;
-	using namespace ac_zemi_2025::carrot_pursuit;
+	using namespace ac_semi_2025::integer_type;
+	using namespace ac_semi_2025::geometry;
+	using namespace ac_semi_2025::icp_on_svd;
+	using namespace ac_semi_2025::read_edges;
+	// using namespace ac_semi_2025::global_map;
+	using namespace ac_semi_2025::ros_world;
+	using namespace ac_semi_2025::carrot_pursuit;
 
 	// ロボの定数と状態
 	struct RobotConstant final {

@@ -8,7 +8,7 @@
 #include "global_map.hpp"
 #include "diff2_pure_pursuit.hpp"
 
-namespace ac_zemi_2025::simulator::impl {
+namespace ac_semi_2025::simulator::impl {
 	using Eigen::Matrix2Xd;
 	using Eigen::Vector2d;
 
@@ -69,7 +69,7 @@ namespace ac_zemi_2025::simulator::impl {
 	}
 }
 
-namespace ac_zemi_2025::simulator {
+namespace ac_semi_2025::simulator {
 	using impl::SimulatorConstant;
 	using impl::SimulatorState;
 	using impl::SensorOutput;
